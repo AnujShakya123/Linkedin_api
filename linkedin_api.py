@@ -6,12 +6,11 @@ CLIENT_ID = '864u3xo2xoq5ll'
 CLIENT_SECRET = 'ucimFx9yqfszjcnM'
 REDIRECT_URI = 'https://www.linkedin.com/developers/tools/oauth/redirect'
 AUTHORIZATION_CODE = 'https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=864u3xo2xoq5ll&redirect_uri=https://www.linkedin.com/developers/tools/oauth/redirect&scope=r_liteprofile%20r_emailaddress%20w_member_social%20openid'  # Replace with the captured authorization code
-# ACCESS_TOKEN = 'AQVzinuZOcJVCgHayAUF-Pwtvv-vH4PtIUP04O1_uCLJenUxKwbJUaoH2pPnNS9HxnXlAmOz_s22lRttt8GaxhVAv8Bs_HvBOIq17ViaW0otSvGYuaPnARNReGllacIqaQn9n8pbhvYliVz-03n3yKgrdGlC0XCjc9gMGY1XXwTdCEPYc9y_8Eh9JccEkdlijgX9RZrL0m6QlnVOnxM8voJQ3p4NIVQ4kkek56Uak3ycsKGdxcQ4wGD2bxAIFa2UEQbiSQ_KaEdd3jVsuA0JrbtfDTdUUrzdqAGS5sFygMvYRR3Y58wj7EpH2GzlYNemA-jpiG8f7AN2oewzMQYlOMR2SrLdFA'  # This will be obtained after the OAuth flow
-ACCESS_TOKEN ='AQWRE83ug7rTYlN6AUdPkuEw-VORn_VTJi2yjhZFPdL-pcSC6NjanbobE9OVBAeG4FGwRrKYgHrUGKcme11KpEz_hzbj5PSReo2sFasCqi-kA-Y8tB6UjK99aMKFHYNg60gokwDxw0YybJYuBTaXbXkRDCIf3GSv6i2PguYFav7CUShToDKynyLY7UqhJmMf-7VJ05tZJF9KKqFWWL87_MwRG3CF_hS2sJa0-Jgnmuse2gD9fR9EJJhrWuDNMJJ9DyslmwWDk12oXGQ_DoRQLFVtgTM2VE1Gid-8ylwj_uBunRC0auB0_1atAxfM2L6nHCSeN0kWjaM9hVEZI0WjBK-xI-Tn3A'
+ACCESS_TOKEN ='AQXJ1PKcxtys3jslnqZsc_gDuvdq2JwlWggJEzRnHS_OYuAsBcmeZxykdZ18TSsFgRz0oaqAp9uC4BSDjNU2piXiugOqFxd5qOSLKA7crrm7BStxd_je_39VnctTQYhbk6jCoBSOSlHNfRX06X3OnXPRJTPeIQUqmPaqfR5yd0Mqy5J6Q9NbJfByVWc5hA_g0cy2ELK4mZBDrE9UEhzpVF8JQaA6C36f5DcFHmEl3m_IwGvKD-KmWh-xkTl7tHp5GFbqKI8uX9_fmrrz0YyMFCbuQ8gNlBHSoi-VrH0EMLHsryxVtinKt9JnKpEvvg4C-x2D4k9GW1Z7Tdj92Ct9hPCgMUhCMQ'
+
 # Function to exchange authorization code for access token
 def get_access_token(auth_code):
-    url = 'https://www.linkedin.com/in/anuj-shakya-325b17197/'
-    # url = 'https://www.linkedin.com/developers/apps/218669837/auth'
+    url = 'https://www.linkedin.com/developers/apps/218669837/auth'
     payload = {
         'grant_type': 'authorization_code',
         'code': auth_code,
