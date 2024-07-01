@@ -10,7 +10,7 @@ ACCESS_TOKEN ='AQXJ1PKcxtys3jslnqZsc_gDuvdq2JwlWggJEzRnHS_OYuAsBcmeZxykdZ18TSsFg
 
 # Function to exchange authorization code for access token
 def get_access_token(auth_code):
-    url = 'https://www.linkedin.com/developers/apps/218669837/auth'
+    url = 'https://www.linkedin.com/developers/apps/218678787/'
     payload = {
         'grant_type': 'authorization_code',
         'code': auth_code,
