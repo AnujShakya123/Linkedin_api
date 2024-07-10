@@ -1,124 +1,101 @@
 import requests
-import json
+from bs4 import BeautifulSoup
 
-# Replace these with your actual values
-CLIENT_ID = '864u3xo2xoq5ll'
-CLIENT_SECRET = 'ucimFx9yqfszjcnM'
-REDIRECT_URI = 'https://www.linkedin.com/developers/tools/oauth/redirect'
-AUTHORIZATION_CODE = 'https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=864u3xo2xoq5ll&redirect_uri=https://www.linkedin.com/developers/tools/oauth/redirect&scope=r_liteprofile%20r_emailaddress%20w_member_social%20openid'  # Replace with the captured authorization code
-ACCESS_TOKEN ='AQXJ1PKcxtys3jslnqZsc_gDuvdq2JwlWggJEzRnHS_OYuAsBcmeZxykdZ18TSsFgRz0oaqAp9uC4BSDjNU2piXiugOqFxd5qOSLKA7crrm7BStxd_je_39VnctTQYhbk6jCoBSOSlHNfRX06X3OnXPRJTPeIQUqmPaqfR5yd0Mqy5J6Q9NbJfByVWc5hA_g0cy2ELK4mZBDrE9UEhzpVF8JQaA6C36f5DcFHmEl3m_IwGvKD-KmWh-xkTl7tHp5GFbqKI8uX9_fmrrz0YyMFCbuQ8gNlBHSoi-VrH0EMLHsryxVtinKt9JnKpEvvg4C-x2D4k9GW1Z7Tdj92Ct9hPCgMUhCMQ'
+# Replace these with the cookies captured from HTTP Toolkit
+cookies = {
+    'li_at': 'AQEFARABAAAAABBwXxkAAAGQlsLtZgAAAZC6z3nmVgAAs3VybjpsaTplbnRlcnByaXNlQXV0aFRva2VuOmVKeGpaQUFDOXNkaU0wRTA1OC9VeDJCNjM2NUtSaEJEVFBTZ0twakJkNmJ5UFFNTEFNVXNDVGc9XnVybjpsaTplbnRlcnByaXNlUHJvZmlsZToodXJuOmxpOmVudGVycHJpc2VBY2NvdW50OjEzMjMyMjk2OSwxNjczMzk0OTEpXnVybjpsaTptZW1iZXI6Nzc2MTQwMzAxxnlrEJm3oxzAS9pkj3-K06Lhwu9xaDutL3kZGegiGku3nD9KQBXhyK8krVtGo-bvdDelYfxZSFU3EqF_PKspNQmzsrvSzbGD-44D6sv-DdRAyoWr3DwCeFwokA1pVpdSE6JtTjoPM_NfKqtNKqlm99xVgC9utucjKlG0ICqGuyaBflJnZFxJmPVYGJfrQ_1LLUd0TQ'
+}
 
-# Function to exchange authorization code for access token
-def get_access_token(auth_code):
-    url = 'https://www.linkedin.com/developers/apps/218678787/'
-    payload = {
-        'grant_type': 'authorization_code',
-        'code': auth_code,
-        'redirect_uri': REDIRECT_URI,
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET
-    }
-    headers = {
-        'Content-Type': 'application/x-www-form-urlencoded'
-    }
-    try:
-        response = requests.post(url, data=payload, headers=headers)
-        response.raise_for_status()  # Raise exception for bad response status
-        return response.json()
-    except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-        print(f"Response status code: {response.status_code}")
-    except Exception as err:
-        print(f"Other error occurred: {err}")
-    return None
+# Replace these with the headers captured from HTTP Toolkit
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    # Add other headers as necessary
+}
 
-# Function to get user profile
-def get_user_profile(token):
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json'
-    }
-    url = 'https://api.linkedin.com/v2/me'
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
+# Session setup
+session = requests.Session()
+session.headers.update(headers)
+for name, value in cookies.items():
+    session.cookies.set(name, value)
+
+# Verify login by requesting the LinkedIn feed
+response = session.get("https://www.linkedin.com/feed/")
+print("Login Verification Status Code:", response.status_code)
+
+# Check and print all cookies to find CSRF token
+print("Session Cookies:")
+for cookie in session.cookies:
+    print(cookie)
+
+# Attempt to get CSRF token from known cookie names
+csrf_token = session.cookies.get("JSESSIONID")
+if csrf_token:
+    csrf_token = csrf_token.strip('"')
+else:
+    # Check if CSRF token is embedded in the HTML
+    soup = BeautifulSoup(response.text, 'html.parser')
+    csrf_meta_tag = soup.find('meta', {'name': 'csrf-token'})
+    if csrf_meta_tag:
+        csrf_token = csrf_meta_tag['content']
     else:
-        print(f"Error getting user profile: {response.status_code}")
-        print(response.json())
-        return None
+        csrf_token = session.cookies.get("ajax:3449190675516434369")
 
-# Function to get user email address
-def get_user_email(token):
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json'
-    }
-    url = 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))'
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Error getting user email: {response.status_code}")
-        print(response.json())
-        return None
+if csrf_token:
+    print("CSRF Token Found:", csrf_token)
+    session.headers.update({
+        "x-restli-protocol-version": "2.0.0",
+        "Content-Type": "application/json"
+    })
 
-# Function to post an update
-def post_update(token, user_urn, message):
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json'
-    }
-    data = {
-        "author": user_urn,
-        "lifecycleState": "PUBLISHED",
-        "specificContent": {
-            "com.linkedin.ugc.ShareContent": {
-                "shareCommentary": {
-                    "text": message
-                },
-                "shareMediaCategory": "NONE"
-            }
-        },
-        "visibility": {
-            "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-        }
-    }
-    response = requests.post('https://api.linkedin.com/v2/ugcPosts', headers=headers, data=json.dumps(data))
-    if response.status_code == 201:
-        return response.json()
-    else:
-        print(f"Error posting update: {response.status_code}")
-        print(response.json())
-        return None
+# Step 1: Post Job Details
+job_post_data = {
+    "jobTitle": "Software Engineer",
+    "company": "Persist Ventures",
+    "workplaceType": "Remote",
+    "employeeLocation": "Mumbai, Maharashtra, India",
+    "jobType": "Full-time",
+}
 
-# Example usage
-if __name__ == '__main__':
-    # Step 1: Get the authorization code by directing the user to:
-    # https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=r_liteprofile%20r_emailaddress%20w_member_social%20openid
+job_post_url = "https://linkedin.sc.omtrdc.net/b/ss/lnkdprod/10/JS-2.20.0/s7325585209947"
+response = session.post(job_post_url, json=job_post_data)
 
-    # Step 2: Exchange the authorization code for an access token
-    token_response = get_access_token(AUTHORIZATION_CODE)
-    if token_response and 'access_token' in token_response:
-        ACCESS_TOKEN = token_response['access_token']
-        print(f"Access Token: {ACCESS_TOKEN}")
+if response.status_code == 200 or response.status_code == 201:
+    print("Job posted successfully!")
+else:
+    print(f"Failed to post job: {response.status_code}")
+    print(response.text)
 
-        # Step 3: Use the access token to get the user profile
-        profile = get_user_profile(ACCESS_TOKEN)
-        if profile:
-            print(f"User Profile: {profile}")
-            user_urn = f"urn:li:person:{profile['id']}"  # Correctly format the user URN
+# Step 2: Move to the Next Page and Post Job Description
+description_data = {
+    "description": "The ideal candidate will be responsible for developing high-quality applications...",
+    "responsibilities": "Develop quality software and web applications...",
+    "qualifications": "Bachelor's degree or equivalent experience...",
+}
 
-            # Step 4: Use the access token to get the user's email address
-            email = get_user_email(ACCESS_TOKEN)
-            if email:
-                print(f"User Email: {email}")
+description_url = "https://linkedin.sc.omtrdc.net/b/ss/lnkdprod/10/JS-2.20.0/s72017443906772"
+response = session.post(description_url, json=description_data)
 
-            # Step 5: Post an update
-            message = "Hello, LinkedIn! This is a test update."
-            update_response = post_update(ACCESS_TOKEN, user_urn, message)
-            if update_response:
-                print(f"Update Response: {update_response}")
-    else:
-        print("Failed to obtain access token")
+if response.status_code == 200 or response.status_code == 201:
+    print("Job description posted successfully!")
+else:
+    print(f"Failed to post job description: {response.status_code}")
+    print(response.text)
 
+# Step 3: Move to the Qualification Settings Page and Submit
+#Provide the Organization email id for verification code
+qualification_data = {
+    "qualificationSettings": {
+        "filterOutRejections": True,
+        "rejectionMessage": "Thank you for your interest in the Software Engineer position at Publicis Sapient France in Gurugram, Haryana, India. Unfortunately, Publicis Sapient France did not select your application to move forward in the hiring process. Regards, Publicis Sapient France"
+    },
+}
 
+qualification_url = "https://www.linkedin.com/voyager/api/jobQualificationEndpoint"
+response = session.post(qualification_url, json=qualification_data)
+
+if response.status_code == 200 or response.status_code == 201:
+    print("Qualification settings posted successfully!")
+else:
+    print(f"Failed to post qualification settings: {response.status_code}")
+    print(response.text)
